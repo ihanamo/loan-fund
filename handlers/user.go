@@ -110,3 +110,19 @@ func UpdateUser(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, user)
 }
+
+func DeleteUser(c echo.Context) error {
+	userID := c.Param("id")
+
+	var user models.User
+	if result := database.DB.First(&user, userID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "user not found"})
+	}
+
+	if result := database.DB.Delete(&user); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, result.Error)
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{"message": "User deleted successfuly"})
+
+}
