@@ -31,15 +31,13 @@ func GenerateJWT(customer models.User) (string, error) {
 	return tokenStr, nil
 }
 
-
-
 func CreateUser(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
 		return err
 	}
 
-	hashPass, err := bcrypt.GenerateFromPassword([]byte(customer.Password), bcrypt.DefaultCost)
+	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"messgae": "Failed to hash password"})
 	}
@@ -62,4 +60,14 @@ func CreateUser(c echo.Context) error {
 		"user":    user,
 		"token":   token,
 	})
+}
+
+func ReadCustomer(c echo.Context) error {
+	usererID := c.Param("id")
+	var user models.User
+	if result := database.DB.First(&user, usererID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, result.Error)
+	}
+
+	return c.JSON(http.StatusOK, user)
 }
