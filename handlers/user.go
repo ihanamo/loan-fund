@@ -62,11 +62,50 @@ func CreateUser(c echo.Context) error {
 	})
 }
 
-func ReadCustomer(c echo.Context) error {
+func ReadUser(c echo.Context) error {
 	usererID := c.Param("id")
 	var user models.User
 	if result := database.DB.First(&user, usererID); result.Error != nil {
 		return c.JSON(http.StatusNotFound, result.Error)
+	}
+
+	return c.JSON(http.StatusOK, user)
+}
+
+func UpdateUser(c echo.Context) error {
+	userID := c.Param("id")
+	var user models.User
+	if result := database.DB.First(&user, userID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, result.Error)
+	}
+
+	updatedUser := new(models.User)
+	if err := c.Bind(updatedUser); err != nil {
+		return err
+	}
+
+	if updatedUser.FirstName != "" {
+		user.FirstName = updatedUser.FirstName
+	}
+
+	if updatedUser.LastName != "" {
+		user.LastName = updatedUser.LastName
+	}
+
+	if updatedUser.Phone != "" {
+		user.Phone = updatedUser.Phone
+	}
+
+	if updatedUser.Password != "" {
+		hashPass, err := bcrypt.GenerateFromPassword([]byte(updatedUser.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return c.JSON(http.StatusInternalServerError, err)
+		}
+		user.Password = string(hashPass)
+	}
+
+	if result := database.DB.Save(&user); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, result.Error)
 	}
 
 	return c.JSON(http.StatusOK, user)
