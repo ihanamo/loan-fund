@@ -1,6 +1,7 @@
 package database
 
 import (
+	"loan-fund/models"
 	"log"
 
 	"gorm.io/driver/sqlite"
@@ -14,5 +15,10 @@ func initDB() {
 	DB, err = gorm.Open(sqlite.Open("fund-loan.db"), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect db", err)
+	}
+
+	err = DB.AutoMigrate(&models.User{})
+	if err != nil {
+		log.Fatal("Failed to migrate db", err)
 	}
 }
