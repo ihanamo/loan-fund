@@ -31,6 +31,29 @@ func GenerateJWT(customer models.User) (string, error) {
 	return tokenStr, nil
 }
 
+func Authenticate(username, password string) (models.User, string, error) {
+	var user models.User
+	log.Println("Authenticating user:", username)
+	result := database.DB.Where("username = ?", username).First(&user)
+	if result.Error != nil {
+		log.Println("User not found:", result.Error)
+		return user, "", echo.NewHTTPError(http.StatusNotFound, "User not found")
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
+	if err != nil {
+		log.Println("Invalid password:", err)
+		return user, "", echo.NewHTTPError(http.StatusUnauthorized, "Invalid password")
+	}
+
+	token, err := GenerateJWT(user)
+	if err != nil {
+		return user, "", echo.NewHTTPError(http.StatusInternalServerError, "Failed to Generate Token")
+	}
+
+	return user, token, nil
+}
+
 func CreateUser(c echo.Context) error {
 	user := new(models.User)
 	if err := c.Bind(user); err != nil {
@@ -59,6 +82,27 @@ func CreateUser(c echo.Context) error {
 		"message": "User created successfuly",
 		"user":    user,
 		"token":   token,
+	})
+}
+
+func LoginUser(c echo.Context) error {
+	credentials := new(models.Credentials)
+	if err := c.Bind(credentials); err != nil {
+		log.Println("Failed to bind credentials:", err)
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Invalid request data"})
+	}
+
+	log.Println("Credentials received:", credentials)
+	user, token, err := Authenticate(credentials.Username, credentials.Password)
+	if err != nil {
+		log.Println("Authentication failed:", err)
+		return c.JSON(http.StatusUnauthorized, echo.Map{"message": "Invalid username or password"})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Login successful",
+		"token":   token,
+		"user":    user,
 	})
 }
 
