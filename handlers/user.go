@@ -62,7 +62,7 @@ func CreateUser(c echo.Context) error {
 
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"messgae": "Failed to hash password"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to hash password"})
 	}
 	user.Password = string(hashPass)
 	log.Println("the hash password is:", user.Password)
@@ -107,9 +107,9 @@ func LoginUser(c echo.Context) error {
 }
 
 func ReadUser(c echo.Context) error {
-	usererID := c.Param("id")
+	userID := c.Param("id")
 	var user models.User
-	if result := database.DB.First(&user, usererID); result.Error != nil {
+	if result := database.DB.First(&user, userID); result.Error != nil {
 		return c.JSON(http.StatusNotFound, result.Error)
 	}
 
