@@ -73,12 +73,12 @@ func MakeRepayment(c echo.Context) error {
 
 	repayment := new(models.Transaction)
 	if err := c.Bind(repayment); err != nil {
-		return c.JSON(http.StatusBadRequest, echo.Map{"message":"Invalid request data"})
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Invalid request data"})
 	}
 
 	var loan models.Loan
-	if result := database.DB.Where("user_id = ? AND status = ?", userID, "active").First(&loan); result.Error != nil{
-		return c.JSON(http.StatusNotFound, echo.Map{"message":"No active loan found"})
+	if result := database.DB.Where("user_id = ? AND status = ?", userID, "active").First(&loan); result.Error != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "No active loan found"})
 	}
 
 	loan.Amount -= repayment.Amount
@@ -88,11 +88,52 @@ func MakeRepayment(c echo.Context) error {
 	}
 
 	if result := database.DB.Save(&loan); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message":"Failed to update loan"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to update loan"})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Repayment successful",
-		"balance":loan.Amount,
+		"balance": loan.Amount,
+	})
+}
+
+func Deposit(c echo.Context) error {
+	userID := c.Param("id")
+
+	var user models.User
+	if result := database.DB.First(&user, userID); result.Error != nil {
+		return c.JSON(http.StatusNotFound, echo.Map{"message": "User not found"})
+	}
+
+	deposit := new(models.Transaction)
+	if err := c.Bind(deposit); err != nil {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Invalid deposit data"})
+	}
+
+	if deposit.Amount <= 0 {
+		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Deposit amount must be greater than zero"})
+	}
+
+	user.AccountBalance += deposit.Amount
+
+	if result := database.DB.Save(&user); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to update user balance"})
+	}
+
+	transaction := models.Transaction{
+		UserID:    user.ID,
+		Type:      "deposit",
+		Amount:    deposit.Amount,
+		Balance:   user.AccountBalance,
+		CreatedAt: time.Now(),
+	}
+
+	if result := database.DB.Create(&transaction); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log transaction"})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message": "Deposit successful",
+		"balance": user.AccountBalance,
 	})
 }

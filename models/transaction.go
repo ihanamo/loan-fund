@@ -8,7 +8,7 @@ type Transaction struct {
 	User      User      `gorm:"foreignKey:UserID"`
 	LoanID    uint      `json:"loan_id" gorm:"not null"`
 	Loan      Loan      `gorm:"foreignKey:LoanID"`
-	Type      string    `json:"type" gorm:"not null"`
+	Type      string    `json:"type" gorm:"not null"`	// "loan", "repayment", "deposit"
 	Amount    float64   `json:"amount" gorm:"not null"`
 	Balance   float64   `json:"balance"`
 	CreatedAt time.Time `json:"created_at"`
