@@ -137,3 +137,18 @@ func Deposit(c echo.Context) error {
 		"balance": user.AccountBalance,
 	})
 }
+
+
+func GetLoanHistory(c echo.Context) error {
+	userID := c.Param("id")
+
+	var transactions []models.Transaction
+	if result := database.DB.Where("user_id = ?", userID).Find(&transactions); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to fetch transactions"})
+	}
+
+	return c.JSON(http.StatusOK, echo.Map{
+		"message":      "Transaction history fetched successfully",
+		"transactions": transactions,
+	})
+}
