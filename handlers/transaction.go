@@ -107,7 +107,7 @@ func MakeRepayment(c echo.Context) error {
 	logEntry := models.Log{
 		UserID:        repayment.UserID,
 		TransactionID: repayment.ID,
-		Type:          "deposit",
+		Type:          "repayment",
 		CreatedAt:     time.Now(),
 	}
 	if result := database.DB.Create(&logEntry); result.Error != nil {
@@ -156,9 +156,20 @@ func Deposit(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log transaction"})
 	}
 
+	logEntry := models.Log{
+		UserID:        deposit.UserID,
+		TransactionID: deposit.ID,
+		Type:          "deposit",
+		CreatedAt:     time.Now(),
+	}
+	if result := database.DB.Create(&logEntry); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log deposit action"})
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Deposit successful",
 		"balance": user.AccountBalance,
+		"log":     logEntry,
 	})
 }
 
