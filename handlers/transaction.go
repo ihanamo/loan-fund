@@ -18,6 +18,7 @@ var LoanOptions = map[string]time.Duration{
 
 func IssueLaon(c echo.Context) error {
 	userIDstr := c.Param("id")
+
 	userID, err := strconv.ParseUint(userIDstr, 10, 32)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, echo.Map{"message": "Invalid user ID"})
@@ -60,11 +61,23 @@ func IssueLaon(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log transaction"})
 	}
 
+	logEntry := models.Log{
+		UserID:        loan.UserID,
+		TransactionID: transaction.ID,
+		Type:          "loan",
+		CreatedAt:     time.Now(),
+	}
+
+	if result := database.DB.Create(&logEntry); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log action"})
+	}
+
 	return c.JSON(http.StatusCreated, echo.Map{
 		"message":  "Loan issued successfuly",
 		"loan":     loan,
 		"due_date": loan.DueDate,
 		"balance":  transaction.Balance,
+		"log":      logEntry,
 	})
 }
 
@@ -137,7 +150,6 @@ func Deposit(c echo.Context) error {
 		"balance": user.AccountBalance,
 	})
 }
-
 
 func GetLoanHistory(c echo.Context) error {
 	userID := c.Param("id")
