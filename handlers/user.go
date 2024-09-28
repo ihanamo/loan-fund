@@ -103,6 +103,10 @@ func LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"message": "Invalid username or password"})
 	}
 
+	if err := LogAction(user.ID, "login","User logged in", nil); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message":"Failed to log login action"})
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Login successful",
 		"token":   token,
