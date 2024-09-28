@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 var LoanOptions = map[string]time.Duration{
@@ -151,7 +151,7 @@ func Deposit(c echo.Context) error {
 	})
 }
 
-func GetLoanHistory(c echo.Context) error {
+func GetTransactionHistory(c echo.Context) error {
 	userID := c.Param("id")
 
 	var transactions []models.Transaction
