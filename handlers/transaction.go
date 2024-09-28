@@ -61,15 +61,8 @@ func IssueLaon(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log transaction"})
 	}
 
-	logEntry := models.Log{
-		UserID:        loan.UserID,
-		TransactionID: transaction.ID,
-		Type:          "loan",
-		CreatedAt:     time.Now(),
-	}
-
-	if result := database.DB.Create(&logEntry); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log action"})
+	if err := LogAction(loan.UserID, "loan", "Loan issued", &loan.ID); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log loan action"})
 	}
 
 	return c.JSON(http.StatusCreated, echo.Map{
@@ -77,7 +70,6 @@ func IssueLaon(c echo.Context) error {
 		"loan":     loan,
 		"due_date": loan.DueDate,
 		"balance":  transaction.Balance,
-		"log":      logEntry,
 	})
 }
 
@@ -104,20 +96,13 @@ func MakeRepayment(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to update loan"})
 	}
 
-	logEntry := models.Log{
-		UserID:        repayment.UserID,
-		TransactionID: repayment.ID,
-		Type:          "repayment",
-		CreatedAt:     time.Now(),
-	}
-	if result := database.DB.Create(&logEntry); result.Error != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log deposit action"})
+	if err := LogAction(repayment.UserID, "repayment", "User repaid loan", &repayment.ID); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log repayment action"})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Repayment successful",
 		"balance": loan.Amount,
-		"log":     logEntry,
 	})
 }
 
@@ -156,20 +141,13 @@ func Deposit(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log transaction"})
 	}
 
-	logEntry := models.Log{
-		UserID:        deposit.UserID,
-		TransactionID: deposit.ID,
-		Type:          "deposit",
-		CreatedAt:     time.Now(),
-	}
-	if result := database.DB.Create(&logEntry); result.Error != nil {
+	if err := LogAction(deposit.UserID, "deposit", "User made a deposit", &deposit.ID); err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log deposit action"})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Deposit successful",
 		"balance": user.AccountBalance,
-		"log":     logEntry,
 	})
 }
 

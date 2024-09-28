@@ -74,7 +74,7 @@ func CreateUser(c echo.Context) error {
 	log.Println("user created")
 
 	if err := LogAction(user.ID, "signup", "user signed up", nil); err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message":"Failed to log sign up action"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log sign up action"})
 	}
 
 	token, err := GenerateJWT(*user)
@@ -103,8 +103,8 @@ func LoginUser(c echo.Context) error {
 		return c.JSON(http.StatusUnauthorized, echo.Map{"message": "Invalid username or password"})
 	}
 
-	if err := LogAction(user.ID, "login","User logged in", nil); err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"message":"Failed to log login action"})
+	if err := LogAction(user.ID, "login", "User logged in", nil); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log login action"})
 	}
 
 	return c.JSON(http.StatusOK, echo.Map{
