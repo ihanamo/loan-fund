@@ -73,6 +73,10 @@ func CreateUser(c echo.Context) error {
 	}
 	log.Println("user created")
 
+	if err := LogAction(user.ID, "signup", "user signed up", nil); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message":"Failed to log sign up action"})
+	}
+
 	token, err := GenerateJWT(*user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to generate token"})
