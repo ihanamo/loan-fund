@@ -104,9 +104,20 @@ func MakeRepayment(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to update loan"})
 	}
 
+	logEntry := models.Log{
+		UserID:        repayment.UserID,
+		TransactionID: repayment.ID,
+		Type:          "deposit",
+		CreatedAt:     time.Now(),
+	}
+	if result := database.DB.Create(&logEntry); result.Error != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"message": "Failed to log deposit action"})
+	}
+
 	return c.JSON(http.StatusOK, echo.Map{
 		"message": "Repayment successful",
 		"balance": loan.Amount,
+		"log":     logEntry,
 	})
 }
 
